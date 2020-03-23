@@ -457,6 +457,7 @@ static char *methodTypesInProtocol(NSString *protocolName, NSString *selectorNam
     return NULL;
 }
 //定义协议
+//jspatch非常依赖协议，它是通过协议来指定方法的参数的，假如没有协议的话js中定义的所有函数的参数都是id，返回值也是id
 static void defineProtocol(NSString *protocolDeclaration, JSValue *instProtocol, JSValue *clsProtocol)
 {
     const char *protocolName = [protocolDeclaration UTF8String];
@@ -468,6 +469,9 @@ static void defineProtocol(NSString *protocolDeclaration, JSValue *instProtocol,
     }
 }
 //添加一组方法到协议
+//js传过来的参数类型保存在paramsType属性中，用逗号分隔，例如
+//int,float
+//返回值也是这样直接传过来，在这里会计算出他们的签名（好像没有考虑某个签名符号后面的数字）
 static void addGroupMethodsToProtocol(Protocol* protocol,JSValue *groupMethods,BOOL isInstance)
 {
     NSDictionary *groupDic = [groupMethods toDictionary];
@@ -823,6 +827,7 @@ static void JPForwardInvocation(__unsafe_unretained id assignSlf, SEL selector, 
     //根据返回值的不同使用不同的方式调用js（[jsFunc callWithArguments:params];）
     //并且设置返回值给invocation（[invocation setReturnValue:&ret];）
     //这里的宏确实是有点复杂
+    //看起来这里在某些情况下会调用几次js函数 callWithArguments可能会在JP_FWD_RET_CALL_JS定义的代码片段中调用n次，期间还会用callSelector反射调用oc函数
     switch (returnType[0] == 'r' ? returnType[1] : returnType[0]) {
         #define JP_FWD_RET_CALL_JS \
             JSValue *jsval; \

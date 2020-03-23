@@ -1,3 +1,4 @@
+//这里调用的是JSPatch中的global.defineClass
 defineClass('JPViewController', {
   handleBtn: function(sender) {
     var tableViewCtrl = JPTableViewController.alloc().init()
